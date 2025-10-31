@@ -1,0 +1,4 @@
+usr/bin/cloud-localds
+usr/bin/mount-image-callback
+usr/bin/resize-part-image
+usr/bin/write-mime-multipart
