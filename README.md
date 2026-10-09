@@ -22,13 +22,12 @@ The package is also available in Alpine and Arch as `cloud-utils`.
 * `growpart` - rewrite partition table so that partition takes up all the space it can
 * `mount-image-callback` - mount a file to a temporary mount point and then invoke the provided cmd with args
 * `resize-part-image` - resize a partition image and contained filesystem to a new size
-* `ubuntu-cloudimage-query` - get the latest Ubuntu AWS AMI meeting certain criteria
 * `vcs-run` - obtain a repository and execute a command with arguments
-* `write-mime-multipart` - utilty for creating mime-multipart files, likely for use via user data and cloud-init
+* `write-mime-multipart` - utility for creating mime-multipart files, likely for use via user data and cloud-init
 
 ## Getting help
 
-If you find a bug or issue please report it on the upstream [Launchpad project](https://bugs.launchpad.net/cloud-utils/+filebug).
+If you find a bug or issue please report it on the upstream [GitHub project](https://github.com/canonical/cloud-utils).
 
 ## License
 

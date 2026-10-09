@@ -23,6 +23,7 @@ import time
 import getopt
 import socket
 import os
+
 try:
     from urllib import request as urllib_request
     from urllib import error as urllib_error
@@ -36,15 +37,15 @@ except ImportError:
 
 instdata_host = "169.254.169.254"
 instdata_ver = "2009-04-04"
-instdata_url = "http://%s/%s" % (instdata_host, instdata_ver)
+instdata_url = f"http://{instdata_host}/{instdata_ver}"
 
 TOKEN_TTL_SECONDS = 21600
 TOKEN_HEADER = "X-aws-ec2-metadata-token"
 TOKEN_HEADER_TTL = "X-aws-ec2-metadata-token-ttl-seconds"
 
-session_token_url = "http://%s/%s/%s" % (instdata_host, 'latest', 'api/token')
+session_token_url = f"http://{instdata_host}/latest/api/token"
 
-__doc__ = """
+__doc__ = f"""
 Query and display EC2 metadata.
 
 If no options are provided, all options will be displayed
@@ -87,21 +88,42 @@ Options:
     --public-keys           display the openssh public keys
     --user-data             display the user data (not actually metadata)
 
-    -u | --url URL          use URL (default: %s)
+    -u | --url URL          use URL (default: {instdata_url})
 
-""" % instdata_url
+"""
 
 
-METAOPTS = ['ami-id', 'ami-launch-index', 'ami-manifest-path',
-            'ancestor-ami-ids', 'availability-zone', 'block-device-mapping',
-            'instance-action', 'instance-id', 'instance-type',
-            'local-hostname', 'local-ipv4', 'kernel-id', 'mac',
-            'profile', 'product-codes', 'public-hostname', 'public-ipv4',
-            'public-keys', 'ramdisk-id', 'reservation-id', 'security-groups',
-            'user-data', 'availability-zone-id', 'region', 'host-id',
-            'group-name', 'partition-number']
+METAOPTS = [
+    "ami-id",
+    "ami-launch-index",
+    "ami-manifest-path",
+    "ancestor-ami-ids",
+    "availability-zone",
+    "block-device-mapping",
+    "instance-action",
+    "instance-id",
+    "instance-type",
+    "local-hostname",
+    "local-ipv4",
+    "kernel-id",
+    "mac",
+    "profile",
+    "product-codes",
+    "public-hostname",
+    "public-ipv4",
+    "public-keys",
+    "ramdisk-id",
+    "reservation-id",
+    "security-groups",
+    "user-data",
+    "availability-zone-id",
+    "region",
+    "host-id",
+    "group-name",
+    "partition-number",
+]
 
-binstdout = os.fdopen(sys.stdout.fileno(), 'wb')
+binstdout = os.fdopen(sys.stdout.fileno(), "wb")
 
 
 def print_binary(data):
@@ -127,8 +149,7 @@ class EC2Metadata:  # pylint: disable=R0903
         if s.port is None:
             port = 80
         if not self._test_connectivity(addr, port):
-            raise Error("could not establish connection to: %s:%s" %
-                        (addr, port))
+            raise Error(f"could not establish connection to: {addr}:{port}")
         self._imdsv2_ensure_token()
 
     @staticmethod
@@ -148,18 +169,18 @@ class EC2Metadata:  # pylint: disable=R0903
         # Get IMDSv2 session token
         request = urllib_request.Request(
             session_token_url,
-            method='PUT',
-            headers={TOKEN_HEADER_TTL: TOKEN_TTL_SECONDS})
+            method="PUT",
+            headers={TOKEN_HEADER_TTL: TOKEN_TTL_SECONDS},
+        )
         resp = urllib_request.urlopen(request)
         self.session_token = resp.read()
 
     def _get(self, uri, decode=True):
-        url = "%s/%s" % (self.burl, uri)
+        url = f"{self.burl}/{uri}"
         try:
             resp = urllib_request.urlopen(
-                urllib_request.Request(
-                    url,
-                    headers={TOKEN_HEADER: self.session_token}))
+                urllib_request.Request(url, headers={TOKEN_HEADER: self.session_token})
+            )
             value = resp.read()
             if decode:
                 value = value.decode()
@@ -177,36 +198,36 @@ class EC2Metadata:  # pylint: disable=R0903
         """return value of metaopt"""
 
         if metaopt not in METAOPTS:
-            raise Error('unknown metaopt', metaopt, METAOPTS)
+            raise Error("unknown metaopt", metaopt, METAOPTS)
 
         if metaopt in [
-                'availability-zone',
-                'availability-zone-id',
-                'region',
-                'host-id',
-                'group-name',
-                'partition-number',
-                ]:
-            return self._get('meta-data/placement/' + metaopt)
+            "availability-zone",
+            "availability-zone-id",
+            "region",
+            "host-id",
+            "group-name",
+            "partition-number",
+        ]:
+            return self._get("meta-data/placement/" + metaopt)
 
-        if metaopt == 'public-keys':
-            data = self._get('meta-data/public-keys')
+        if metaopt == "public-keys":
+            data = self._get("meta-data/public-keys")
             if data is None:
                 return None
 
-            keyids = [line.split('=')[0] for line in data.splitlines()]
+            keyids = [line.split("=")[0] for line in data.splitlines()]
 
             public_keys = []
             for keyid in keyids:
-                uri = 'meta-data/public-keys/%d/openssh-key' % int(keyid)
+                uri = f"meta-data/public-keys/{int(keyid)}/openssh-key"
                 public_keys.append(self._get(uri).rstrip())
 
             return public_keys
 
-        if metaopt == 'user-data':
-            return self._get('user-data', decode=False)
+        if metaopt == "user-data":
+            return self._get("user-data", decode=False)
 
-        return self._get('meta-data/' + metaopt)
+        return self._get("meta-data/" + metaopt)
 
 
 def get(metaopt):
@@ -226,7 +247,7 @@ def display(metaopts, burl, prefix=False):
             value = "unavailable"
 
         if prefix:
-            print("%s: %s" % (metaopt, value))
+            print(f"{metaopt}: {value}")
         elif metaopt == "user-data":
             # We want to avoid binary blob corruption while printing as string
             print_binary(value)
@@ -239,8 +260,8 @@ def usage(s=None):
 
     msg = ""
     if s:
-        msg = "Error: %s\n" % s
-    msg += "Syntax: %s [options]\n" % sys.argv[0]
+        msg = f"Error: {s}\n"
+    msg += f"Syntax: {sys.argv[0]} [options]\n"
     msg += __doc__
     sys.stderr.write(msg + "\n")
     sys.exit(1)
@@ -251,8 +272,8 @@ def main():
 
     try:
         getopt_metaopts = METAOPTS[:]
-        getopt_metaopts.append('help')
-        getopt_metaopts.append('url=')
+        getopt_metaopts.append("help")
+        getopt_metaopts.append("url=")
         opts, _ = getopt.gnu_getopt(sys.argv[1:], "hu:", getopt_metaopts)
     except getopt.GetoptError as e:
         usage(e)
@@ -262,13 +283,13 @@ def main():
     metaopts = []
     prefix = False
     for opt, val in opts:
-        if opt in ('-h', '--help'):
+        if opt in ("-h", "--help"):
             usage()
-        if opt in ('-u', '--url'):
+        if opt in ("-u", "--url"):
             burl = val
             continue
 
-        metaopts.append(opt.replace('--', ''))
+        metaopts.append(opt.replace("--", ""))
 
     if len(metaopts) == 0:
         prefix = True
